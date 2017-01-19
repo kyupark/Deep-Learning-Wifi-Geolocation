@@ -13,29 +13,24 @@ def normalize_bssid(bssid):
     bssid=":".join(digits)
     return bssid
 
-location_table = raw_input('Enter location name: ') #.split(' ')
-#location_table = "_".join(location_table)
+location_table = raw_input('Enter location name: ')
 
 conn = sqlite3.connect('wgdl.db')
 c = conn.cursor()
 
-c.execute("DROP TABLE '{}'".format(location_table))
+c.execute("DROP TABLE IF EXISTS '{}'".format(location_table))
 c.execute("CREATE TABLE '{}' (bssid char(17) primary key, ssid char(32), channel SMALLINT)".format(location_table,))
-# c.execute("CREATE TABLE routers (bssid char(17) primary key, ssid char(32), channel SMALLINT)")
-# c.execute("CREATE INDEX index ON {}".format(loc))
-
 
 airport_cmd = "/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -s -x > airport.plist"
 
 for count in range(1, 11):
-    timenow = datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+    timenow = datetime.now().strftime('%H:%M:%S') # '%Y-%m-%d %H:%M:%S.%f'
     print "%s Scan %i" % (timenow, count)
 
     subprocess.check_output(airport_cmd, shell=True)
     pl = plistlib.readPlist('airport.plist')
 
     c.execute("ALTER TABLE '{}' ADD COLUMN '{}' SMALLINT DEFAULT(-100);".format(location_table, timenow))
-    # c.execute("""INSERT INTO '{}' (timestamp) VALUES (?);""".format(location_table), (timenow,))
 
     for router in pl:
         bssid = normalize_bssid(router['BSSID'])
@@ -48,13 +43,7 @@ for count in range(1, 11):
         if exist is None:
             c.execute("INSERT INTO '{}' (bssid, ssid, channel) VALUES (?, ?, ?)".format(location_table), (bssid, ssid, channel))
 
-        #columns = [i[1] for i in c.execute("PRAGMA table_info('{}')".format(location_table))]
-        #if bssid not in columns:
-        #    c.execute("ALTER TABLE '{}' ADD COLUMN '{}' SMALLINT DEFAULT(-100);".format(location_table, bssid))
-        print rssi, bssid
         c.execute("""UPDATE '{}' SET '{}' = '{}' WHERE bssid = '{}'""".format(location_table, timenow, rssi, bssid))
-        #c.execute("""UPDATE '{}' SET '{}' = '{}' WHERE 'bssid' = '{}'""".format(location_table, timenow, rssi, bssid))
-
 
         conn.commit()
 
