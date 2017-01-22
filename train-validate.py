@@ -42,13 +42,20 @@ zeros = np.zeros((A.shape[0], 1))
 CC = np.hstack((A, zeros, zeros, ones))
 
 ABC = np.vstack((AA, BB, CC))
+np.random.shuffle(ABC)
 
 xy = ABC
-x_data = np.asarray(xy)[:,:-3]
-y_data = np.asarray(xy)[:,-3:]
+x_data = np.asarray(xy)[3:,:-3]
+y_data = np.asarray(xy)[3:,-3:]
+
+x_test = np.asarray(xy)[:3,:-3]
+y_test = np.asarray(xy)[:3,-3:]
 
 xs = x_data.shape[1]
 ys = y_data.shape[1]
+
+# xs = 100
+# ys = 3
 
 X = tf.placeholder("float", [None, xs])
 Y = tf.placeholder("float", [None, ys])
@@ -70,14 +77,6 @@ with tf.Session() as sess:
         if step % 500 == 0:
             print step, sess.run(cost, feed_dict={X:x_data, Y:y_data}), sess.run(W)
 
-    # a = sess.run(hypothesis, feed_dict={X:[[1, 11, 7]]})
-    # print a, sess.run(tf.arg_max(a, 1))
-    #
-    # b = sess.run(hypothesis, feed_dict={X:[[1, 3, 4]]})
-    # print b, sess.run(tf.arg_max(b, 1))
-    #
-    # c = sess.run(hypothesis, feed_dict={X:[[1, 1, 0]]})
-    # print b, sess.run(tf.arg_max(c, 1))
-    #
-    # all = sess.run(hypothesis, feed_dict={X:[[1, 11, 7], [1, 3, 4], [1, 1, 0]]})
-    # print all, sess.run(tf.arg_max(all, 1))
+    a = sess.run(hypothesis, feed_dict={X:x_test})
+    print a, sess.run(tf.arg_max(a, 1))
+    print y_test
